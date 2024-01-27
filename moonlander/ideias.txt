@@ -1,0 +1,16 @@
+-- aprendizado não supervisionado --
+
+algum dado estatístico como: felicidade X religiao X uso de drogas X;
+
+
+
+-- aprendizado supervisionado --
+
+reconhecimento de equações (e possível solução da mesma);
+reconhecimento de funções de transferência, e retorno em diagrama de Bode;
+reconhecer qual é a função de transferencia a partir do LGR ou Bode;
+determinar bode ou LGR a partir da funcao de transferencia;
+
+a partir de uma imagem de frequencia, determinar qual a funcao;
+
+Obstruído (10 un.)/ Velocidade > 9/ Velocidade < -10/	Distancia ao chão/	Spot na esquerda/ No SPOT/ Inclinacao > 0 /Inclinação = 0/ Inclinacao > 4/ Inclinacao < -4

@@ -1,0 +1,69 @@
+ # obstruido / velocidade < -10 / spotEsquerda / inclinacao < 15
+        #x = np.array([[0, 0],[0, 1],[1, 0], [1, 1]])
+        x = np.array([[0, 0, 0],[0, 0, 1],[0, 1, 0],[0, 1, 1],[1, 0, 0], [1, 0, 1],[1, 1, 0], [1, 1, 1]])
+
+        y = np.array([0, 1, 1, 1, 1, 1, 1, 1])
+
+        camadaOR = nn.layerDenseCreate(3, 1, nn.binary)
+
+        layers = [camadaOR]
+
+        w = nn.train(x, y, layers, method='cmaes')
+
+        layers = nn.networkDeserialize(w, layers)
+
+        wi = GameConstants.landerWidth
+        he = GameConstants.landerHeight
+        
+        ## verificando se está obstruído
+        landerLeft = game.states[-1].landerx - wi
+        landerRight = game.states[-1].landerx  + wi
+        landerBottom = game.states[-1].landery - he/2
+
+        # :: OBSTRUIDO, VELOCIDADE < -10, DISTANCIA DO CHAO < 20
+        # SEMPRE COMEÇO NULO E VOU OBTENDO AS INFORMAÇÕES DO SENSORES
+        DADOS = np.array([0, 0]) #adicionar um 0
+
+        # :: OBTENDO O PONTO MÉDIO DE SPOT DE POUSO
+        landingSpot_x = []
+        for l in game.landscape:
+            if l.landingSpot:
+                landingSpot_x.append(l.p0.x)
+
+        midleLandingSpot = (landingSpot_x[0] + landingSpot_x[-1])/2
+
+
+        ########## SENSORES = VALOR DE ENTRADA DA REDE ########
+        
+        for l in game.landscape:
+            ### :: sensor de obstrução de caminho 
+            if l.p0.y >= (game.states[-1].landery - he - 10): #10 unidades de distancia por garantia (obstrucao a (esquerda))
+                #print(str(l.p0.y)+' >= '+str((game.states[-1].landery - he)))
+                if (l.p0.x < landerLeft and midleLandingSpot < l.p0.x ): #se spot está pra esqueda
+                    DADOS[0] = 1
+
+            ### :: sensor de distância do solo
+
+            ## se a diferença da posição atual da nave com o chao é menor que a base da nave, então está nessa verificação de chão e,
+            # se está a menos de 20 posições do chão
+            if abs(l.p0.x - game.states[-1].landerx) < wi and (landerBottom - l.p0.y) < 20: 
+                DADOS[2] = 1
+        
+
+        ### :: sensor de alta velocidade de descida
+        #print(game.states[-1].landerdy)
+        if game.states[-1].landerdy < -10:
+            DADOS[1] = 1
+
+
+
+
+        gs = game.states[-1]
+        #print(nn.networkCalculate(obstruido, layers))
+
+        result = nn.networkCalculate(DADOS, layers)
+
+        if result[0] == 1:
+            gs.increaseLanderThrust = True
+        else:
+            gs.increaseLanderThrust = False
