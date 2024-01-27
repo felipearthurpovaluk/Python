@@ -1,0 +1,58 @@
+import socket
+
+conexao = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+ip = '127.0.0.1'
+porta = 50000
+origem = (ip,porta)
+
+conexao.bind(origem)
+conexao.listen(1)
+[sock_dados, info_cliente] = conexao.accept()
+
+input('Escolha seu personagem e pressione enter assim que escolher...')
+
+tipo = 0
+tipo_bytes = tipo.to_bytes(1,byteorder='big',signed=False)
+sock_dados.send(tipo_bytes)
+
+finalizado = False
+
+while not finalizado:
+
+    cod_bytes = sock_dados.recv(1)
+    cod = int.from_bytes(cod_bytes, byteorder='big', signed=False)
+    tamanho_bytes = sock_dados.recv(4)
+    tamanho = int.from_bytes(tamanho_bytes, byteorder='big', signed=False)
+    pergunta_bytes = sock_dados.recv(tamanho)
+    pergunta = pergunta_bytes.decode(encoding='UTF-8')
+    
+    if cod == 0:
+        print('Cliente pergunta:', pergunta)
+        validado = False
+        while not validado:
+            resposta = input('Qual é a resposta (s/n)?')
+            if resposta == 's' or resposta == 'n':
+                validado = True
+        if resposta == 's':
+            tipo = 1
+        else:
+            tipo = 2
+    else:
+        print('Cliente arrisca palpite:', pergunta)
+        validado = False
+        while not validado:
+            resposta = input('O palpite estava certo (s/n)?')
+            if resposta == 's' or resposta == 'n':
+                validado = True
+        if resposta == 's':
+            tipo = 4
+            finalizado = True
+        else:
+            tipo = 3
+
+    tipo_bytes = tipo.to_bytes(1,byteorder='big',signed=False)
+    sock_dados.send(tipo_bytes)
+
+sock_dados.close()
+conexao.close()

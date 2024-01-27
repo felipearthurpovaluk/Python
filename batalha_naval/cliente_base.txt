@@ -1,0 +1,56 @@
+import socket
+
+sock_dados = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+ip_destino = '127.0.0.1'
+porta_destino = 50000
+destino = (ip_destino, porta_destino)
+
+sock_dados.connect(destino)
+
+print('Conectado, aguardando servidor escolher o personagem...')
+
+tipo_bytes = sock_dados.recv(1)
+tipo = int.from_bytes(tipo_bytes, byteorder='big', signed=False)
+
+print('Personagem escolhido, iniciando o jogo...')
+
+finalizado = False
+
+while not finalizado:
+    
+    comando = ''
+    validado = False
+    while not validado:
+        comando = input('Digite 0 para perguntar ou 1 para arriscar palpite: ')
+        if comando == '0' or comando == '1':
+            validado = True
+    
+    comando = int(comando)
+    texto = ''
+    if comando == 0:
+        texto = input('Digite a pergunta que deseja fazer: ')
+    else:
+        texto = input('Digite o seu palpite: ')
+    
+    comando_bytes = comando.to_bytes(1, byteorder='big', signed=False)
+    texto_bytes = texto.encode(encoding='UTF-8')
+    tamanho = len(texto_bytes)
+    tamanho_bytes = tamanho.to_bytes(4, byteorder= 'big', signed=False)
+    mensagem  = comando_bytes + tamanho_bytes + texto_bytes
+    sock_dados.send(mensagem)
+
+    tipo_bytes = sock_dados.recv(1)
+    tipo = int.from_bytes(tipo_bytes, byteorder='big', signed=False)
+
+    if tipo == 1:
+        print('Resposta da pergunta: Sim')
+    elif tipo == 2:
+        print('Resposta da pergunta: Não')
+    elif tipo == 3:
+        print('Seu palpite está errado, tente novamente.')
+    elif tipo == 4:
+        print('Parabéns, você acertou!')
+        finalizado = True
+    
+sock_dados.close()
